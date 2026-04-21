@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLOUD OBS - Ders Kayıt Sistemi v3</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="giris-ekrani">
+    <div class="glass-card">
+        <div class="logo-area">
+            <div class="cloud-icon">☁</div>
+            <h2><span>CLOUD OBS</span></h2>
+        </div>
+        <p>Öğrenci Bilgi Sistemi Girişi</p>
+        <form id="girisFormu">
+            <div class="input-group">
+                <input type="text" id="ogrNo" required placeholder="Öğrenci Numarası">
+            </div>
+            <div class="input-group">
+                <input type="password" id="sifre" required placeholder="OBS Şifresi">
+            </div>
+            <button type="submit" class="glow-button">Sisteme Giriş Yap</button>
+        </form>
+        <div class="footer-text">
+            © 2026 CLOUD UNIVERSITY | Bilgi İşlem Daire Başkanlığı
+        </div>
+    </div>
+</div>
+
+    <div id="obs-ekrani">
+        <div class="header">
+            <div><strong>CLOUD UNIVERSITY </strong> | Ders Seçimi</div>
+            <div>Öğrenci: <span id="disp-no"></span></div>
+        </div>
+
+        <div class="container">
+            <div class="panel">
+                <div class="panel-header">Açılan Dersler Listesi</div>
+                <div class="panel-body">
+                    <table>
+                        <thead>
+                            <tr><th>Kod</th><th>Ders Adı</th><th>Hoca</th><th>AKTS</th><th>Kontenjan</th><th>İşlem</th></tr>
+                        </thead>
+                        <tbody id="acilan-ders-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    Seçilen Dersler Listesi
+                    <div class="akts-info">
+                        Toplam AKTS: <span id="toplam-akts">0</span> / 40 
+                        <span id="limit-label" class="limit-uyari">⚠️ Limit Doldu!</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <table id="secilen-ders-tablo">
+                        <thead>
+                            <tr><th>Kod</th><th>Ders Adı</th><th>AKTS</th><th>İşlem</th></tr>
+                        </thead>
+                        <tbody id="secilen-ders-body"></tbody>
+                    </table>
+                    <button class="btn-onay" id="onayBtn">Danışman Onayına Gönder (Kesinleştir)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="cloud-monitor">
+            <div>SİSTEM: CLOUD_DISTRIBUTED_APP</div>
+            <div>CPU: <span id="cpu-load">%12</span></div>
+            <div>DURUM: <span id="system-status" style="color: white;">BEKLENİYOR</span></div>
+        </div>
+    </div>
+
+    <script>
+        const dersler = [
+            { kod: 'TBL334', ad: 'Bulut Bilişim Teknolojilerine Giriş', hoca: 'Dr. Öğr. Üyesi Önder YAKUT', akts: 5, kont: 75, max: 80 },
+            { kod: 'TBL306', ad: 'Bilgisayar Ağları', hoca: 'Prof. Dr. Mehmet YILDIRIM', akts: 5, kont: 40, max: 60 },
+            { kod: 'TBL308', ad: 'Bilişim Sistemleri ve Güvenliği', hoca: 'Öğr. Gör. Alper METİN', akts: 4, kont: 30, max: 50 },
+            { kod: 'TBL322', ad: 'Makine Öğrenmesine Giriş', hoca: 'Doç. Dr. Zeynep Hilal KİLİMCİ', akts: 5, kont: 48, max: 50 },
+            { kod: 'TBL304', ad: 'Web Programlama', hoca: 'Dr. Öğr. Üyesi Önder YAKUT', akts: 4, kont: 20, max: 40 },
+            { kod: 'TBL332', ad: 'Yazılım Geliştirme Lab-II', hoca: 'Dr. Öğr. Üyesi Seda BALTA KAÇ', akts: 3, kont: 15, max: 30 },
+            { kod: 'TBL302', ad: 'İşletim Sistemleri', hoca: 'Dr. Öğr. Üyesi Seda BALTA KAÇ', akts: 4, kont: 55, max: 60 },
+            { kod: 'IJAVA', ad: 'İleri Java Uygulamaları', hoca: 'Dr. Öğr. Üyesi Samet Diri', akts: 5, kont: 25, max: 50 },
+            { kod: 'HABER', ad: 'Haberleşme Sistemleri', hoca: 'Doç. Dr. M. Hikmet Bilgehan UÇAR', akts: 5, kont: 10, max: 40 },
+            { kod: 'TBL310', ad: 'Veri Yapıları ve Algoritmalar', hoca: 'Doç. Dr. Serdar SOLAK', akts: 6, kont: 35, max: 50 },
+            { kod: 'TBL402', ad: 'Yapay Zeka', hoca: 'Prof. Dr. Mehmet YILDIRIM', akts: 6, kont: 20, max: 40 },
+            // Yeni Eklenen Dersler:
+            { kod: 'TBL412', ad: 'Veri Madenciliği', hoca: 'Doç. Dr. Zeynep Hilal KİLİMCİ', akts: 5, kont: 30, max: 50 },
+            { kod: 'TBL414', ad: 'Mobil Programlama', hoca: 'Dr. Öğr. Üyesi Önder YAKUT', akts: 5, kont: 25, max: 45 }
+        ];
+
+        let secilenler = [];
+        const MAX_AKTS = 40;
+
+        function guncelle() {
+            const acilanBody = document.getElementById('acilan-ders-body');
+            acilanBody.innerHTML = '';
+            let currentAkts = secilenler.reduce((s, d) => s + d.akts, 0);
+
+            dersler.forEach(d => {
+                const eklendi = secilenler.some(s => s.kod === d.kod);
+                // Burada butonun kilitlenme mantığı:
+                const limitAsimi = (currentAkts + d.akts) > MAX_AKTS;
+                
+                acilanBody.innerHTML += `
+                    <tr>
+                        <td><b>${d.kod}</b></td>
+                        <td>${d.ad}</td>
+                        <td>${d.hoca}</td>
+                        <td>${d.akts}</td>
+                        <td>${d.kont}/${d.max}</td>
+                        <td><button class="btn-ekle" onclick="ekle('${d.kod}')" ${eklendi || limitAsimi ? 'disabled' : ''}>${eklendi ? 'Eklendi' : 'Ekle'}</button></td>
+                    </tr>`;
+            });
+
+            const secilenBody = document.getElementById('secilen-ders-body');
+            secilenBody.innerHTML = '';
+            secilenler.forEach(s => {
+                secilenBody.innerHTML += `<tr><td>${s.kod}</td><td>${s.ad}</td><td>${s.akts}</td><td><button class="btn-sil" onclick="cikar('${s.kod}')">Çıkar</button></td></tr>`;
+            });
+
+            document.getElementById('toplam-akts').innerText = currentAkts;
+            // Limit uyarısını toplam 40 olunca çıkar:
+            document.getElementById('limit-label').style.display = currentAkts >= 40 ? 'inline' : 'none';
+        }
+
+        window.ekle = (kod) => {
+            const ders = dersler.find(d => d.kod === kod);
+            if(ders) {
+                secilenler.push(ders);
+                ders.kont++;
+                guncelle();
+            }
+        };
+
+        window.cikar = (kod) => {
+            const index = secilenler.findIndex(s => s.kod === kod);
+            if(index !== -1) {
+                secilenler[index].kont--;
+                secilenler.splice(index, 1);
+                guncelle();
+            }
+        };
+
+        document.getElementById('girisFormu').addEventListener('submit', (e) => {
+           e.preventDefault();
+
+            const ogrNo = document.getElementById('ogrNo').value;
+            const sifre = document.getElementById('sifre').value;
+
+            const dogruOgrNo = "231307072";
+            const dogruSifre = "1234";
+
+          if (ogrNo === dogruOgrNo && sifre === dogruSifre) {
+           document.getElementById('disp-no').innerText = ogrNo;
+           document.getElementById('giris-ekrani').style.display = 'none';
+           document.getElementById('obs-ekrani').style.display = 'block';
+           guncelle();
+          } else {
+          alert("Öğrenci numarası veya şifre hatalı.");
+            }
+        });
+
+        document.getElementById('onayBtn').addEventListener('click', async function() {
+    if(secilenler.length === 0) { 
+        alert("Ders seçmeden kesinleştirme yapılamaz."); 
+        return; 
+    }
+
+    this.disabled = true;
+    this.innerText = "Gönderiliyor...";
+
+    document.getElementById('cpu-load').innerText = "%99";
+    document.getElementById('cpu-load').style.color = "red";
+    document.getElementById('system-status').innerText = "YOĞUNLUK";
+    document.getElementById('system-status').style.color = "red";
+
+    try {
+        const res = await fetch('/api/kaydet', {
+            method: 'POST'
+        });
+
+        const data = await res.json();
+
+        alert("Server'dan cevap geldi");
+
+    } catch(err) {
+        alert("Hata oluştu");
+    }
+
+    this.innerText = "Tamamlandı";
+});
+    </script>
+</body>
+</html>
