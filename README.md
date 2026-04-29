@@ -1,15 +1,14 @@
 # Course Scale System 
 <div align="center">
 
-![Node](https://img.shields.io/badge/NODE-EXPRESS-3B82F6?style=for-the-badge&logo=node.js&logoColor=white&labelColor=1E3A8A)
-![JS](https://img.shields.io/badge/JAVASCRIPT-FRONTEND-EC4899?style=for-the-badge&logo=javascript&logoColor=white&labelColor=9D174D)
+![JavaScript](https://img.shields.io/badge/JAVASCRIPT-FRONTEND-EC4899?style=for-the-badge&logo=javascript&logoColor=white&labelColor=9D174D)
 ![HTML](https://img.shields.io/badge/HTML-PAGE-3B82F6?style=for-the-badge&logo=html5&logoColor=white&labelColor=1E3A8A)
 ![CSS](https://img.shields.io/badge/CSS-STYLING-EC4899?style=for-the-badge&logo=css3&logoColor=white&labelColor=9D174D)
-
+![Node](https://img.shields.io/badge/NODE-EXPRESS-3B82F6?style=for-the-badge&logo=node.js&logoColor=white&labelColor=1E3A8A)
+![API](https://img.shields.io/badge/API-REST-EC4899?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=9D174D)
 ![AWS](https://img.shields.io/badge/AWS-EC2-3B82F6?style=for-the-badge&logo=amazonaws&logoColor=white&labelColor=1E3A8A)
 ![JMeter](https://img.shields.io/badge/JMETER-LOAD_TEST-EC4899?style=for-the-badge&logo=apachejmeter&logoColor=white&labelColor=9D174D)
-![API](https://img.shields.io/badge/API-REST-3B82F6?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=1E3A8A)
-![Cloud](https://img.shields.io/badge/CLOUD-COMPUTING-EC4899?style=for-the-badge&logo=icloud&logoColor=white&labelColor=9D174D)
+![Cloud](https://img.shields.io/badge/CLOUD-COMPUTING-3B82F6?style=for-the-badge&logo=icloud&logoColor=white&labelColor=1E3A8A)
 
 </div>
 Bu proje, üniversite ders kayıt sistemlerinin yoğunluk altında nasıl davrandığını incelemek ve bulut bilişim ile ölçeklenebilirliğini analiz etmek amacıyla geliştirilmiştir.
