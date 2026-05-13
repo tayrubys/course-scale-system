@@ -131,79 +131,113 @@ app.post("/api/register", (req, res) => {
         });
     }
 
-    const checkDuplicateSql = `
-    SELECT id
-    FROM registrations
-    WHERE student_id = ? AND course_id = ?
-  `;
-
-    db.query(checkDuplicateSql, [student_id, course_id], (err, duplicateResults) => {
+    db.beginTransaction((err) => {
         if (err) {
             return res.status(500).json({
-                message: "Kayıt kontrolü yapılamadı."
+                message: "Transaction başlatılamadı."
             });
         }
 
-        if (duplicateResults.length > 0) {
-            return res.status(400).json({
-                message: "Bu ders zaten seçildi."
-            });
-        }
-
-        const checkCourseSql = `
-      SELECT id, quota, current_enrollment
-      FROM courses
-      WHERE id = ?
+        const duplicateSql = `
+      SELECT id
+      FROM registrations
+      WHERE student_id = ? AND course_id = ?
+      FOR UPDATE
     `;
 
-        db.query(checkCourseSql, [course_id], (err, courseResults) => {
+        db.query(duplicateSql, [student_id, course_id], (err, duplicateResults) => {
             if (err) {
-                return res.status(500).json({
-                    message: "Ders kontrolü yapılamadı."
+                return db.rollback(() => {
+                    res.status(500).json({
+                        message: "Kayıt kontrolü yapılamadı."
+                    });
                 });
             }
 
-            if (courseResults.length === 0) {
-                return res.status(404).json({
-                    message: "Ders bulunamadı."
+            if (duplicateResults.length > 0) {
+                return db.rollback(() => {
+                    res.status(400).json({
+                        message: "Bu ders zaten seçildi."
+                    });
                 });
             }
 
-            const course = courseResults[0];
-
-            if (course.current_enrollment >= course.quota) {
-                return res.status(400).json({
-                    message: "Ders kontenjanı dolu."
-                });
-            }
-
-            const insertRegistrationSql = `
-        INSERT INTO registrations (student_id, course_id)
-        VALUES (?, ?)
+            const courseSql = `
+        SELECT id, quota, current_enrollment
+        FROM courses
+        WHERE id = ?
+        FOR UPDATE
       `;
 
-            db.query(insertRegistrationSql, [student_id, course_id], (err) => {
+            db.query(courseSql, [course_id], (err, courseResults) => {
                 if (err) {
-                    return res.status(500).json({
-                        message: "Ders seçimi yapılamadı."
+                    return db.rollback(() => {
+                        res.status(500).json({
+                            message: "Ders kontrolü yapılamadı."
+                        });
                     });
                 }
 
-                const updateEnrollmentSql = `
-          UPDATE courses
-          SET current_enrollment = current_enrollment + 1
-          WHERE id = ?
+                if (courseResults.length === 0) {
+                    return db.rollback(() => {
+                        res.status(404).json({
+                            message: "Ders bulunamadı."
+                        });
+                    });
+                }
+
+                const course = courseResults[0];
+
+                if (course.current_enrollment >= course.quota) {
+                    return db.rollback(() => {
+                        res.status(400).json({
+                            message: "Ders kontenjanı dolu."
+                        });
+                    });
+                }
+
+                const insertSql = `
+          INSERT INTO registrations (student_id, course_id)
+          VALUES (?, ?)
         `;
 
-                db.query(updateEnrollmentSql, [course_id], (err) => {
+                db.query(insertSql, [student_id, course_id], (err) => {
                     if (err) {
-                        return res.status(500).json({
-                            message: "Kontenjan güncellenemedi."
+                        return db.rollback(() => {
+                            res.status(500).json({
+                                message: "Ders seçimi yapılamadı."
+                            });
                         });
                     }
 
-                    res.status(201).json({
-                        message: "Ders başarıyla seçildi."
+                    const updateSql = `
+            UPDATE courses
+            SET current_enrollment = current_enrollment + 1
+            WHERE id = ?
+          `;
+
+                    db.query(updateSql, [course_id], (err) => {
+                        if (err) {
+                            return db.rollback(() => {
+                                res.status(500).json({
+                                    message: "Kontenjan güncellenemedi."
+                                });
+                            });
+                        }
+
+                        db.commit((err) => {
+                            if (err) {
+                                return db.rollback(() => {
+                                    res.status(500).json({
+                                        message: "İşlem kaydedilemedi."
+                                    });
+                                });
+                            }
+
+                            res.status(201).json({
+                                message: "Ders başarıyla seçildi."
+                            });
+                        });
                     });
                 });
             });
