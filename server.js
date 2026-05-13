@@ -1,13 +1,14 @@
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(__dirname));
 
 const db = mysql.createConnection({
     host: "localhost",
@@ -24,8 +25,10 @@ db.connect((err) => {
     console.log("MySQL veritabanına bağlanıldı.");
 });
 
+
+
 app.get("/", (req, res) => {
-    res.send("Cloud OBS sunucusu çalışıyor.");
+    res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.post("/api/login", (req, res) => {
