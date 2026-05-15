@@ -39,7 +39,58 @@ Sistem performansı Apache JMeter kullanılarak test edilmiştir. Farklı kullan
 
 ##  Proje Hedefi
 Bu proje ile bulut tabanlı sistemlerin yüksek trafik altında daha verimli çalıştığı ve ölçeklenebilir olduğu gösterilmiştir.
+---
+## Durum Diyagramı
 
+```mermaid
+stateDiagram-v2
+    [*] --> Pending
+
+    Pending --> InService: EC2 başlatılır
+
+    InService --> Launching: CPU > eşik\nScale Out tetiklenir
+    Launching --> InService: Yeni instance hazır
+
+    InService --> Terminating: CPU düşer\nScale In tetiklenir
+    Terminating --> InService: Fazla instance kaldırılır
+
+    InService --> Unhealthy: Health Check başarısız
+    Unhealthy --> Terminating: Instance sonlandırılır
+    Terminating --> [*]
+```
+---
+## Varlık İlişki Diyagramı
+
+```mermaid
+erDiagram
+    STUDENTS ||--o{ ENROLLMENTS : "ders kaydı yapar"
+    COURSES ||--o{ ENROLLMENTS : "kayıt içerir"
+
+    STUDENTS {
+        int id PK
+        string student_number
+        string full_name
+        string password
+    }
+
+    COURSES {
+        int id PK
+        string course_code
+        string course_name
+        string instructor
+        int ects
+        int quota
+        int current_enrollment
+    }
+
+    ENROLLMENTS {
+        int id PK
+        int student_id FK
+        int course_id FK
+        datetime created_at
+    }
+```
+---
 ##  Projeyi Çalıştırma
 ```bash
 npm install
