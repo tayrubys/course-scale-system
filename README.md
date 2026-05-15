@@ -40,6 +40,33 @@ Sistem performansı Apache JMeter kullanılarak test edilmiştir. Farklı kullan
 ##  Proje Hedefi
 Bu proje ile bulut tabanlı sistemlerin yüksek trafik altında daha verimli çalıştığı ve ölçeklenebilir olduğu gösterilmiştir.
 ---
+## Akış Şeması
+
+```mermaid
+flowchart TD
+    A([Başla]) --> B[Kullanıcı isteği sisteme gönderir]
+    B --> C[İstek Application Load Balancer'a ulaşır]
+    C --> D[Load Balancer sağlıklı EC2 hedeflerini kontrol eder]
+    D --> E[İstek uygun EC2 instance'ına yönlendirilir]
+    E --> F[EC2 uygulaması RDS MySQL ile iletişim kurar]
+    F --> G[CPU kullanım oranı CloudWatch tarafından izlenir]
+
+    G --> H{CPU kullanımı eşik değerin üzerinde mi?}
+
+    H -- Evet --> I[Auto Scaling Group yeni EC2 instance başlatır]
+    I --> J[Yeni instance sağlık kontrolünden geçer]
+    J --> K[Instance Target Group'a eklenir ve trafik almaya başlar]
+    K --> N[Sistem çalışmaya devam eder]
+
+    H -- Hayır --> L{CPU kullanımı eşik değerin altında mı?}
+    L -- Evet --> M[Auto Scaling Group fazla instance'ı sonlandırır]
+    M --> O[Target Group aktif hedef sayısını günceller]
+    O --> N
+
+    L -- Hayır --> N
+    N --> G
+```
+---
 ## Durum Diyagramı
 
 ```mermaid
